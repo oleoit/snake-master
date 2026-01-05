@@ -6,165 +6,251 @@
     <title>Snake Master 🐍</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐍</text></svg>">
     
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+
     <style>
-        /* --- การจัดหน้าหลัก (แก้ไขใหม่) --- */
+        :root {
+            --neon-green: #39ff14;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --dark-bg: #0a0a12;
+            --panel-bg: rgba(20, 20, 35, 0.8);
+        }
+
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh; /* ความสูงอย่างน้อยเต็มหน้าจอ */
+            min-height: 100vh;
             margin: 0;
-            padding: 20px 0; /* เพิ่มระยะห่างบน-ล่าง */
-            background: radial-gradient(circle, #2c3e50, #000);
+            /* พื้นหลังแบบ Cyberpunk */
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 243, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(57, 255, 20, 0.15) 0%, transparent 50%),
+                linear-gradient(0deg, rgba(0,0,0,0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.2) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px;
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            padding: 20px;
             box-sizing: border-box;
-            touch-action: manipulation;
-            /* เอา overflow: hidden ออก เพื่อให้เลื่อนจอได้ถ้าเครื่องเล็กจัด */
+        }
+
+        /* --- Header Section --- */
+        .header-container {
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 10;
         }
 
         .game-title {
-            font-size: clamp(1.8rem, 8vw, 2.5rem);
-            margin: 0 0 10px 0;
-            color: #2ecc71;
-            font-weight: 800;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            text-align: center;
-            flex-shrink: 0; /* ไม่ให้หดตัว */
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin: 0;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            /* เอฟเฟกต์ตัวอักษรเรืองแสง */
+            text-shadow: 
+                0 0 5px var(--neon-green),
+                0 0 10px var(--neon-green),
+                0 0 20px var(--neon-green);
         }
 
-        .score-board {
+        .game-title .icon { display: inline-block; filter: drop-shadow(0 0 5px var(--neon-green)); }
+
+        .score-panel {
+            display: inline-flex;
+            gap: 30px;
+            background: var(--panel-bg);
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2) inset;
+            margin-top: 10px;
             font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #bdc3c7;
-            flex-shrink: 0;
+            font-weight: 700;
+        }
+
+        .score-item { display: flex; flex-direction: column; align-items: center; }
+        .score-label { font-size: 0.8rem; color: var(--neon-blue); letter-spacing: 1px; }
+        .score-value { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: white; }
+        #highScoreVal { color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); }
+
+        /* --- Main Content Layout --- */
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* --- Game Canvas Container --- */
+        .canvas-container {
+            position: relative;
+            padding: 5px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-green));
+            border-radius: 15px;
+            box-shadow: 
+                0 0 20px rgba(0, 243, 255, 0.5),
+                0 0 40px rgba(57, 255, 20, 0.3);
+        }
+        
+        .canvas-container::before {
+            content: ''; position: absolute; inset: 2px;
+            background: var(--dark-bg); border-radius: 13px; z-index: 0;
         }
 
         canvas {
-            border: 4px solid #34495e;
+            position: relative; z-index: 1;
+            background-color: #050508;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
             border-radius: 10px;
-            background-color: #000;
-            /* ปรับขนาดให้ยืดหยุ่นตามจอ */
-            width: 90vw;
-            height: 90vw; 
-            max-width: 400px;
-            max-height: 400px;
-            box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
-            flex-shrink: 0;
+            width: 85vw; height: 85vw;
+            max-width: 450px; max-height: 450px;
+            display: block;
         }
 
-        /* --- ปุ่มควบคุมสำหรับมือถือ --- */
+        /* --- Controls --- */
+        .controls-panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
         .controls {
             display: grid;
-            grid-template-areas: 
-                ". up ."
-                "left down right";
-            gap: 8px;
-            margin-top: 25px;
-            margin-bottom: 20px; /* ดัน Footer ให้ห่างออกไป */
-            flex-shrink: 0;
+            grid-template-areas: ". up ." "left down right";
+            gap: 10px;
         }
 
         .btn-control {
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            width: 65px; height: 65px;
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 1px solid rgba(0, 243, 255, 0.3);
             border-radius: 12px;
-            color: white;
-            font-size: 1.4rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            color: var(--neon-blue);
+            font-size: 1.8rem;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; user-select: none;
+            box-shadow: 
+                0 4px 6px rgba(0,0,0,0.2),
+                0 0 10px rgba(0, 243, 255, 0.1) inset;
+            transition: all 0.1s ease;
+            text-shadow: 0 0 5px var(--neon-blue);
         }
 
-        .btn-control:active { background: #2ecc71; transform: scale(0.95); }
-        .up { grid-area: up; }
-        .down { grid-area: down; }
-        .left { grid-area: left; }
-        .right { grid-area: right; }
+        .btn-control:active {
+            transform: translateY(2px) scale(0.95);
+            background: var(--neon-blue); color: var(--dark-bg);
+            box-shadow: 0 0 20px var(--neon-blue);
+            border-color: transparent;
+        }
 
-        /* --- Footer (แก้ไขใหม่) --- */
+        .up { grid-area: up; } .down { grid-area: down; }
+        .left { grid-area: left; } .right { grid-area: right; }
+
+        /* --- Footer --- */
         footer {
-            /* ลบ margin-top: auto ออก เพื่อไม่ให้ฝืนดันไปติดขอบล่าง */
-            margin-top: 10px; 
-            padding: 15px;
-            font-size: 0.85rem;
+            margin-top: 30px;
+            font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.5);
             letter-spacing: 1px;
-            text-align: center;
-            flex-shrink: 0; /* ป้องกัน Footer หดจนข้อความเละ */
+            text-transform: uppercase;
+        }
+        footer b { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+
+        /* --- Layout สำหรับแนวนอน (Landscape) --- */
+        @media (orientation: landscape) and (min-width: 768px) {
+            body { justify-content: center; padding: 10px; }
+            .header-container { margin-bottom: 10px; }
+            .main-content-wrapper {
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 40px;
+            }
+            canvas { width: 70vh; height: 70vh; max-width: 500px; max-height: 500px; }
+            .controls-panel { padding: 15px; }
+            .btn-control { width: 55px; height: 55px; font-size: 1.5rem; }
         }
 
-        footer b { color: #2ecc71; font-weight: 600; }
-
-        /* --- Popup Modal --- */
+        /* --- Popup Modal (Re-styled) --- */
         #gameOverModal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(10, 10, 18, 0.9);
+            backdrop-filter: blur(15px); justify-content: center; align-items: center; z-index: 100;
         }
-
         .modal-content {
-            background: #fff;
-            color: #333;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            width: 85%;
-            max-width: 320px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: popIn 0.3s ease-out;
+            background: linear-gradient(135deg, var(--panel-bg), rgba(0,0,0,0.9));
+            border: 2px solid var(--neon-pink);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+            padding: 40px; border-radius: 20px; text-align: center; width: 300px;
         }
-
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
+        .modal-content h2 {
+            font-family: 'Orbitron', sans-serif; color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink); margin-top: 0; font-size: 2rem;
+        }
+        .modal-score { font-size: 1.2rem; margin: 15px 0; color: #bdc3c7; }
+        .modal-score span { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; }
         .btn-restart {
-            background: #2ecc71; color: white; border: none;
-            padding: 12px; font-size: 1.1rem; border-radius: 50px;
-            cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+            color: var(--dark-bg); border: none; padding: 15px; width: 100%;
+            border-radius: 50px; font-weight: 800; font-size: 1.2rem; margin-top: 25px;
+            cursor: pointer; box-shadow: 0 0 20px rgba(57, 255, 20, 0.5); transition: 0.2s;
         }
-        .btn-restart:hover { background: #27ae60; }
-
-        /* ซ่อนปุ่มบนจอคอมพิวเตอร์ */
-        @media (min-width: 768px) {
-           .controls { display: none; }
-           /* บนจอใหญ่ ดัน footer ไปล่างสุดได้ */
-           footer { margin-top: auto; }
-        }
+        .btn-restart:hover { box-shadow: 0 0 30px rgba(57, 255, 20, 0.8); transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-    <h1 class="game-title">SNAKE MASTER 🐍</h1>
-    <div class="score-board">คะแนน: <span id="scoreVal" style="color:#fff">0</span></div>
+    <div class="header-container">
+        <h1 class="game-title">Snake Master <span class="icon">🐍</span></h1>
+        <div class="score-panel">
+            <div class="score-item">
+                <span class="score-label">SCORE</span>
+                <span class="score-value" id="scoreVal">0</span>
+            </div>
+            <div class="score-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 30px;">
+                <span class="score-label">BEST</span>
+                <span class="score-value" id="highScoreVal">0</span>
+            </div>
+        </div>
+    </div>
     
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="main-content-wrapper">
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="450" height="450"></canvas>
+        </div>
 
-    <div class="controls">
-        <div class="btn-control up" onclick="handleBtn('up')">▲</div>
-        <div class="btn-control left" onclick="handleBtn('left')">◀</div>
-        <div class="btn-control down" onclick="handleBtn('down')">▼</div>
-        <div class="btn-control right" onclick="handleBtn('right')">▶</div>
+        <div class="controls-panel">
+            <div class="controls">
+                <div class="btn-control up" onclick="handleBtn('up')">▲</div>
+                <div class="btn-control left" onclick="handleBtn('left')">◀</div>
+                <div class="btn-control down" onclick="handleBtn('down')">▼</div>
+                <div class="btn-control right" onclick="handleBtn('right')">▶</div>
+            </div>
+        </div>
     </div>
 
     <footer>Developed by <b>Yutthana Pumamob</b></footer>
 
     <div id="gameOverModal">
         <div class="modal-content">
-            <h2 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 2rem;">GAME OVER!</h2>
-            <p style="font-size: 1.2rem; margin: 10px 0;">ทำคะแนนได้: <span id="finalScore" style="color: #2ecc71; font-weight: bold; font-size: 1.5rem;">0</span></p>
-            <button class="btn-restart" onclick="resetGame()">เล่นอีกครั้ง</button>
+            <h2>GAME OVER!</h2>
+            <div class="modal-score">SCORE: <span id="finalScore" style="color:var(--neon-green)">0</span></div>
+            <div class="modal-score">BEST: <span id="modalHighScore" style="color:var(--neon-pink)">0</span></div>
+            <button class="btn-restart" onclick="resetGame()">PLAY AGAIN</button>
         </div>
     </div>
 
@@ -172,71 +258,61 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("scoreVal");
+        const highScoreElement = document.getElementById("highScoreVal");
         const modal = document.getElementById("gameOverModal");
         const finalScoreElement = document.getElementById("finalScore");
+        const modalHighScoreElement = document.getElementById("modalHighScore");
 
-        const gridSize = 20;
-        // คำนวณ tileCount จากขนาด canvas จริงที่แสดงผล
+        const gridSize = 15; // ลดขนาด Grid เพื่อให้ภาพดูละเอียดขึ้น
         let tileCount = canvas.width / gridSize;
+        
+        let highScore = localStorage.getItem("snakeHighScore") || 0;
+        highScoreElement.innerText = highScore;
 
-        let score = 0;
-        let dx = 0, dy = 0;
+        let score = 0, dx = 0, dy = 0;
         let snake = [{x: 10, y: 10}, {x: 10, y: 11}, {x: 10, y: 12}];
-        let foodX = 5, foodY = 5;
-        let gameActive = true;
-        let lastDirection = ''; // ป้องกันการกดปุ่มย้อนกลับทิศเดิมเร็วๆ
+        let foodX = 5, foodY = 5, gameActive = true, lastDir = "";
 
-        // คีย์บอร์ด
-        document.addEventListener("keydown", changeDirection);
+        document.addEventListener("keydown", (e) => {
+            if(e.keyCode === 37) handleBtn('left');
+            if(e.keyCode === 38) handleBtn('up');
+            if(e.keyCode === 39) handleBtn('right');
+            if(e.keyCode === 40) handleBtn('down');
+        });
 
-        // ฟังก์ชันสำหรับปุ่มกดบนหน้าจอ
         function handleBtn(dir) {
-            if (dir === 'up' && lastDirection !== 'down') { dx = 0; dy = -1; lastDirection = 'up';}
-            if (dir === 'down' && lastDirection !== 'up') { dx = 0; dy = 1; lastDirection = 'down';}
-            if (dir === 'left' && lastDirection !== 'right') { dx = -1; dy = 0; lastDirection = 'left';}
-            if (dir === 'right' && lastDirection !== 'left') { dx = 1; dy = 0; lastDirection = 'right';}
-        }
-
-        function changeDirection(event) {
-            const keyPressed = event.keyCode;
-            if (keyPressed === 37) handleBtn('left');
-            if (keyPressed === 38) handleBtn('up');
-            if (keyPressed === 39) handleBtn('right');
-            if (keyPressed === 40) handleBtn('down');
+            if (dir === 'up' && lastDir !== 'down') { dx = 0; dy = -1; lastDir = 'up'; }
+            if (dir === 'down' && lastDir !== 'up') { dx = 0; dy = 1; lastDir = 'down'; }
+            if (dir === 'left' && lastDir !== 'right') { dx = -1; dy = 0; lastDir = 'left'; }
+            if (dir === 'right' && lastDir !== 'left') { dx = 1; dy = 0; lastDir = 'right'; }
         }
 
         function main() {
             if (!gameActive) return;
             if (didGameEnd()) { showGameOver(); return; }
-
-            setTimeout(function onTick() {
-                clearCanvas();
-                drawFood();
-                advanceSnake();
-                drawSnake();
-                main();
-            }, 120); // ปรับความเร็วให้เหมาะสมกับมือถือ (ช้าลงนิดหน่อย)
+            setTimeout(() => {
+                clearCanvas(); drawFood(); advanceSnake(); drawSnake(); main();
+            }, 100);
         }
 
         function clearCanvas() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // เส้น Grid บางๆ
-            ctx.strokeStyle = "#222";
-            ctx.lineWidth = 0.5;
-            for(let i=0; i<canvas.width; i+=gridSize) {
-                ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
-            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
         function drawSnake() {
             snake.forEach((part, index) => {
-                ctx.fillStyle = (index === 0) ? "#2ecc71" : "#27ae60";
+                ctx.fillStyle = (index === 0) ? "#39ff14" : "#00f3ff"; // สีเขียวหัว, สีฟ้านีออนตัว
+                
+                // เพิ่มเอฟเฟกต์เรืองแสง (Glow) ให้ตัวงู
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = (index === 0) ? "#39ff14" : "#00f3ff";
+
                 ctx.beginPath();
-                // ใช้ fillRect ธรรมดาเพื่อประสิทธิภาพบนมือถือบางรุ่น
-                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize-1, gridSize-1);
+                ctx.roundRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize-2, gridSize-2, 4);
                 ctx.fill();
+                
+                // Reset shadow เพื่อไม่ให้กระทบส่วนอื่น
+                ctx.shadowBlur = 0;
             });
         }
 
@@ -246,9 +322,7 @@
                 score += 10;
                 scoreElement.innerHTML = score;
                 createFood();
-            } else {
-                if(dx !== 0 || dy !== 0) snake.pop();
-            }
+            } else { if(dx !== 0 || dy !== 0) snake.pop(); }
             if(dx !== 0 || dy !== 0) snake.unshift(head);
         }
 
@@ -264,18 +338,20 @@
 
         function showGameOver() {
             gameActive = false;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("snakeHighScore", highScore);
+                highScoreElement.innerText = highScore;
+            }
             finalScoreElement.innerText = score;
+            modalHighScoreElement.innerText = highScore;
             modal.style.display = "flex";
         }
 
         function resetGame() {
-            score = 0; scoreElement.innerHTML = "0";
-            dx = 0; dy = 0; lastDirection = '';
+            score = 0; scoreElement.innerHTML = "0"; dx = 0; dy = 0; lastDir = "";
             snake = [{x: 10, y: 10}, {x: 10, y: 11}, {x: 10, y: 12}];
-            gameActive = true;
-            modal.style.display = "none";
-            createFood();
-            main();
+            gameActive = true; modal.style.display = "none"; createFood(); main();
         }
 
         function createFood() {
@@ -285,13 +361,17 @@
         }
 
         function drawFood() {
-            ctx.fillStyle = "#e74c3c";
+            ctx.fillStyle = "#ff00ff"; // อาหารสีชมพูนีออน
+            // เพิ่มเอฟเฟกต์เรืองแสงให้อาหาร
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = "#ff00ff";
+
             ctx.beginPath();
             ctx.arc((foodX * gridSize) + gridSize/2, (foodY * gridSize) + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
         }
 
-        // เริ่มเกม
         createFood();
         main();
     </script>
